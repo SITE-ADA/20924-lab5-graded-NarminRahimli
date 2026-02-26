@@ -1,3 +1,4 @@
+
 package az.edu.ada.wm2.lab5.service;
 
 import az.edu.ada.wm2.lab5.model.Event;
@@ -85,19 +86,45 @@ public class EventServiceImpl implements EventService {
     // Custom methods
     @Override
     public List<Event> getEventsByTag(String tag) {
-        return List.of();
+        if tag == null || tag.isBlank() {
+            return List.of();
+        }
+        return eventRepository.findAll().stream()
+                .filter(event -> event.getTags() != null &&
+                        event.getTags().stream()
+                                .anyMatch(t -> t.equalsIgnoreCase(tag)))
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<Event> getUpcomingEvents() {
-        return List.of();
+        LocalDateTime now = LocalDateTime.now();
+
+        return eventRepository.findAll().stream()
+                .filter(event -> event.getEventDateTime() != null &&
+                        event.getEventDateTime().isAfter(now))
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<Event> getEventsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
-       return List.of();
-    }
 
+        if (minPrice == null && maxPrice == null) {
+            return List.of();
+        }
+
+        return eventRepository.findAll().stream()
+                .filter(event -> event.getTicketPrice() != null)
+                .filter(event -> {
+                    BigDecimal price = event.getTicketPrice();
+
+                    boolean greaterThanMin = (minPrice == null) || price.compareTo(minPrice) >= 0;
+                    boolean lessThanMax = (maxPrice == null) || price.compareTo(maxPrice) <= 0;
+
+                    return greaterThanMin && lessThanMax;
+                })
+                .collect(Collectors.toList());
+    }
     @Override
     public List<Event> getEventsByDateRange(LocalDateTime start, LocalDateTime end) {
         return List.of();
